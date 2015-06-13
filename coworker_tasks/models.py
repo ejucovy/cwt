@@ -43,6 +43,19 @@ All columns apart from user_id and new_data_* will be ignored by the job code
             assert row.get("originating_page_id") and int(row['originating_page_id'])
             assert row.get("originating_action_id") and int(row['originating_action_id'])
 
+            try:
+                f = CoreActionField.objects.using("ak").select_related("action").filter(
+                    action__page__name=row['originating_page_name'],
+                    action__user__id=int(row['user_id']),
+                    name="welcome_employer",
+                    value=row['employer'])[0]
+            except IndexError:
+                pass
+            else:
+                task_log.activity_log(task, {"id": row['user_id'],
+                                             "existing_action": f.action.id})
+                continue
+            
             data = {
                 'id': row['user_id'],
                 'page': row['processing_page_name'],
