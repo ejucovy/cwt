@@ -7,7 +7,7 @@ from django.db import models
 import traceback
 from django.conf import settings
 
-class UserModificationForm(BatchForm):
+class WelcomeForm(BatchForm):
     help_text = """
 The SQL must return a column named `user_id`.
 
@@ -25,9 +25,8 @@ All columns apart from user_id and new_data_* will be ignored by the job code
 """
 
     def run(self, task, rows):
-        rest = RestClient()
-        rest.safety_net = False
-
+        ak = Client()
+        
         task_log = get_task_log()
 
         n_rows = n_success = n_error = 0
@@ -37,19 +36,26 @@ All columns apart from user_id and new_data_* will be ignored by the job code
             n_rows += 1
 
             assert row.get("user_id") and int(row['user_id'])
+            assert row.get("employer")
+            assert row.get("num_employees") and int(row['num_employees'])
+            assert row.get("threshold") and int(row['threshold'])
+            assert row.get("processing_page_name") and int(row['processing_page_name'])
+            assert row.get("originating_page_id") and int(row['originating_page_id'])
+            assert row.get("originating_action_id") and int(row['originating_action_id'])
 
-            new_values = {"id": row['user_id']}
-            for key in row:
-                if not key.startswith("new_data_"):
-                    continue
-                new_values[key.replace("new_data_", "", 1)] = row[key]
-
-            task_log.activity_log(task, new_values)
-            new_values.pop("id")
+            data = {
+                'id': row['user_id'],
+                'page': row['processing_page_name'],
+                'action_welcome_employer': row['employer'],
+                'action_welcome_num_employees': row['num_employees'],
+                'user_welcome_employer': row['employer'],
+                'user_welcome_num_employees': row['num_employees'],                
+            }
+            data['action_originating_page_url'] = data['user_originating_page_url'] = "@@TODO"
+            
+            task_log.activity_log(task, data)
             try:
-                rest.user.put(id=row['user_id'], **new_values)
-                resp = {}
-                resp['log_id'] = row['user_id']
+                resp = ak.act(data)
                 task_log.success_log(task, resp)
             except Exception, e:
                 n_error += 1
@@ -63,4 +69,4 @@ All columns apart from user_id and new_data_* will be ignored by the job code
         return n_rows, n_success, n_error
 
 from main.task_registry import register_task
-register_task("UserModificationJob", "Modify Users", UserModificationForm)
+register_task("WelcomeJob", "Welcome Prep", WelcomeForm)
