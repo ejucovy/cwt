@@ -63,10 +63,11 @@ All columns apart from user_id and new_data_* will be ignored by the job code
                 'user_welcome_employer': row['employer'],
                 'user_welcome_num_employees': row['num_employees'],                
             }
-            if data['originating_page_name'].startswith("controlshift-"):
-                data['originating_page_url'] = "https://www.coworker.org/petitions/%s" % data['originating_page_name'][len("controlshift-")]
+            if row['originating_page_name'].startswith("controlshift-"):
+                data['action_originating_page_url'] = "https://www.coworker.org/petitions/%s" % row['originating_page_name'][len("controlshift-")]
             else:
-                data['originating_page_url'] = "http://act.coworker.org/act/%s" % data['originating_page_name']
+                data['action_originating_page_url'] = "http://act.coworker.org/act/%s" % row['originating_page_name']
+            data['user_originating_page_url'] = data['action_originating_page_url']
             
             task_log.activity_log(task, data)
             try:
