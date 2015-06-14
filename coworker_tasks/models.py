@@ -86,3 +86,11 @@ All columns apart from user_id and new_data_* will be ignored by the job code
 
 from main.task_registry import register_task
 register_task("WelcomeJob", "Welcome Prep", WelcomeForm)
+
+class LogEntry(models.Model):
+    task = models.ForeignKey('main.JobTask')
+    type = models.CharField(max_length=10)
+    data = models.TextField(null=True, blank=True)
+from djangohelpers.lib import register_admin
+register_admin(LogEntry)
+
