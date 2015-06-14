@@ -38,9 +38,8 @@ All columns apart from user_id and new_data_* will be ignored by the job code
             assert row.get("user_id") and int(row['user_id'])
             assert row.get("employer")
             assert row.get("num_employees") and int(row['num_employees'])
-            assert row.get("threshold") and int(row['threshold'])
-            assert row.get("processing_page_name") and int(row['processing_page_name'])
-            assert row.get("originating_page_name") and int(row['originating_page_name'])
+            assert row.get("processing_page_name") 
+            assert row.get("originating_page_name") 
             assert row.get("originating_action_id") and int(row['originating_action_id'])
 
             try:
