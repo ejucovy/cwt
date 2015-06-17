@@ -39,7 +39,8 @@ All columns apart from user_id and new_data_* will be ignored by the job code
             assert row.get("employer")
             assert row.get("num_employees") and int(row['num_employees'])
             assert row.get("processing_page_name") 
-            assert row.get("originating_page_name") 
+            assert row.get("originating_page_name")
+            assert row.get("originating_page_title")             
             assert row.get("originating_action_id") and int(row['originating_action_id'])
 
             try:
@@ -65,10 +66,12 @@ All columns apart from user_id and new_data_* will be ignored by the job code
             }
             if row['originating_page_name'].startswith("controlshift-"):
                 data['action_welcome_originating_page_url'] = "https://www.coworker.org/petwitions/%s" % row['originating_page_name'][len("controlshift-"):]
+                data['action_welcome_originating_page_title'] = row['originating_page_title'][len("ControlShift: "):]
             else:
                 data['action_welcome_originating_page_url'] = "http://act.coworker.org/act/%s" % row['originating_page_name']
+                data['action_welcome_originating_page_title'] = row['originating_page_title']
             data['user_welcome_originating_page_url'] = data['action_welcome_originating_page_url']
-            
+            data['user_welcome_originating_page_title'] = data['action_welcome_originating_page_title']            
             task_log.activity_log(task, data)
             try:
                 resp = ak.act(data)
