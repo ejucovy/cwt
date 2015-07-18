@@ -65,7 +65,7 @@ All columns apart from user_id and new_data_* will be ignored by the job code
                 'user_welcome_num_employees': row['num_employees'],                
             }
             if row['originating_page_name'].startswith("controlshift-"):
-                data['action_welcome_originating_page_url'] = "https://www.coworker.org/petwitions/%s" % row['originating_page_name'][len("controlshift-"):]
+                data['action_welcome_originating_page_url'] = "https://www.coworker.org/petitions/%s" % row['originating_page_name'][len("controlshift-"):]
                 data['action_welcome_originating_page_title'] = row['originating_page_title'][len("ControlShift: "):]
             else:
                 data['action_welcome_originating_page_url'] = "http://act.coworker.org/act/%s" % row['originating_page_name']
