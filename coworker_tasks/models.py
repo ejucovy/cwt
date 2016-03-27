@@ -99,6 +99,7 @@ from django.db import models, connections
 import traceback
 from django.conf import settings
 import decimal
+import json
 
 class ReportPublishForm(BatchForm):
 
@@ -106,23 +107,23 @@ class ReportPublishForm(BatchForm):
     actionkit_signup_form_id = forms.IntegerField()
 
     def run_sql(self, sql):
+        cursor = connections['ak'].cursor()
         cursor.execute(sql)
-
+            
         row = cursor.fetchone()
         while row:
             row = [float(i) if isinstance(i, decimal.Decimal) else i for i in row]
             yield dict(zip([i[0] for i in cursor.description], row))
-            row = cursor.fetchone()        
+            row = cursor.fetchone()
     
     def run(self, task, rows):
         ak = Client()
-        
+
         task_log = get_task_log()
-
-        report = QueryReport.objects.using("ak").get(id=self.cleaned_data['report_id'])
-        cursor = connections['ak'].cursor()
+        
+        report = QueryReport.objects.using("ak").get(report_ptr__id=self.cleaned_data['report_id'])
         rows = list(self.run_sql(report.sql))
-
+        
         api = RestClient()
         api.signupform.patch(id=self.cleaned_data['actionkit_signup_form_id'], introduction_text=json.dumps(rows))
         
