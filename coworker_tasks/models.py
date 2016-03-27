@@ -90,6 +90,46 @@ All columns apart from user_id and new_data_* will be ignored by the job code
 from main.task_registry import register_task
 register_task("WelcomeJob", "Welcome Prep", WelcomeForm)
 
+from main.forms import BatchForm, get_task_log
+from django import forms
+from actionkit import Client
+from actionkit.rest import client as RestClient
+from actionkit.models import CoreAction, CoreActionField, Report, QueryReport
+from django.db import models, connections
+import traceback
+from django.conf import settings
+import decimal
+
+class ReportPublishForm(BatchForm):
+
+    report_id = forms.IntegerField()
+    actionkit_signup_form_id = forms.IntegerField()
+
+    def run_sql(self, sql):
+        cursor.execute(sql)
+
+        row = cursor.fetchone()
+        while row:
+            row = [float(i) if isinstance(i, decimal.Decimal) else i for i in row]
+            yield dict(zip([i[0] for i in cursor.description], row))
+            row = cursor.fetchone()        
+    
+    def run(self, task, rows):
+        ak = Client()
+        
+        task_log = get_task_log()
+
+        report = QueryReport.objects.using("ak").get(id=self.cleaned_data['report_id'])
+        cursor = connections['ak'].cursor()
+        rows = list(self.run_sql(report.sql))
+
+        api = RestClient()
+        api.signupform.patch(id=self.cleaned_data['actionkit_signup_form_id'], introduction_text=json.dumps(rows))
+        
+        return 1, 1, 0
+
+register_task("ReportPublishJob", "Report Publishing Job", ReportPublishForm)
+
 class LogEntry(models.Model):
     task = models.ForeignKey('main.JobTask')
     type = models.CharField(max_length=10)
